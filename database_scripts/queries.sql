@@ -2,7 +2,6 @@
 -- SQL QUERIES
 -- ============================================
 
-
 -- QUERY 1: INSERT
 -- Add a new equipment to the equipment table.
 INSERT INTO equipment VALUES ('EQ021','NodeMCU ESP8266','CAT05','LAB05',15,15,'AVAILABLE',DATE '2025-01-15');
@@ -57,6 +56,89 @@ SELECT * FROM equipment WHERE category_id = 'CAT05' AND status = 'AVAILABLE';
 -- QUERY 11: SEARCH + SORT QUERY
 -- Search router-related equipment and show newest records first.
 SELECT * FROM equipment WHERE UPPER(equipment_name) LIKE UPPER('%Router%') ORDER BY purchase_date DESC;
+
+
+-- SAVE CHANGES
+COMMIT;
+
+
+-- ============================================
+-- ADVANCED SQL QUERIES
+-- ============================================
+
+-- QUERY 1: JOIN
+-- Show booking information with user details.
+SELECT b.booking_id, u.full_name, b.equipment_id, b.quantity, b.status FROM booking_requests b JOIN users u ON b.user_id = u.user_id;
+
+
+-- QUERY 2: INNER JOIN
+-- Show equipment with category information.
+SELECT e.equipment_id, e.equipment_name, c.category_name FROM equipment e INNER JOIN categories c ON e.category_id = c.category_id;
+
+
+-- QUERY 3: LEFT JOIN
+-- Show all users and their booking requests.
+SELECT u.user_id, u.full_name, b.booking_id, b.status FROM users u LEFT JOIN booking_requests b ON u.user_id = b.user_id;
+
+
+-- QUERY 4: LEFT JOIN
+-- Show all equipment and borrow records.
+SELECT e.equipment_id, e.equipment_name, br.borrow_id, br.borrow_status FROM equipment e LEFT JOIN borrow_records br ON e.equipment_id = br.equipment_id;
+
+
+-- QUERY 5: GROUP BY
+-- Count equipment in each category.
+SELECT category_id, COUNT(*) AS total_equipment FROM equipment GROUP BY category_id;
+
+
+-- QUERY 6: GROUP BY
+-- Count bookings made by each user.
+SELECT user_id, COUNT(*) AS total_bookings FROM booking_requests GROUP BY user_id;
+
+
+-- QUERY 7: HAVING
+-- Show users who made more than one booking.
+SELECT user_id, COUNT(*) AS total_bookings FROM booking_requests GROUP BY user_id HAVING COUNT(*) > 1;
+
+
+-- QUERY 8: HAVING
+-- Show categories having more than 3 equipment.
+SELECT category_id, COUNT(*) AS total_equipment FROM equipment GROUP BY category_id HAVING COUNT(*) > 3;
+
+
+-- QUERY 9: SUBQUERY
+-- Find equipment with quantity greater than average quantity.
+SELECT equipment_id, equipment_name, total_quantity FROM equipment WHERE total_quantity > (SELECT AVG(total_quantity) FROM equipment);
+
+
+-- QUERY 10: SUBQUERY
+-- Find users who have approved bookings.
+SELECT full_name FROM users WHERE user_id IN (SELECT user_id FROM booking_requests WHERE status = 'APPROVED');
+
+
+-- REPORT 1: MOST BORROWED EQUIPMENT
+-- Display most borrowed equipment.
+SELECT equipment_id, SUM(quantity) AS total_borrowed FROM borrow_records GROUP BY equipment_id ORDER BY total_borrowed DESC;
+
+
+-- REPORT 2: LATE RETURNS
+-- Display overdue borrowed equipment.
+SELECT borrow_id, user_id, equipment_id, expected_return_date FROM borrow_records WHERE borrow_status = 'OVERDUE';
+
+
+-- REPORT 3: EQUIPMENT BY CATEGORY
+-- Display equipment grouped by category.
+SELECT c.category_name, COUNT(e.equipment_id) AS total_equipment FROM categories c LEFT JOIN equipment e ON c.category_id = e.category_id GROUP BY c.category_name ORDER BY total_equipment DESC;
+
+
+-- REPORT 4: TOTAL FINES BY USER
+-- Display total fines for each user.
+SELECT u.full_name, SUM(f.amount) AS total_fine FROM users u JOIN borrow_records br ON u.user_id = br.user_id JOIN fines f ON br.borrow_id = f.borrow_id GROUP BY u.full_name ORDER BY total_fine DESC;
+
+
+-- REPORT 5: BORROWED EQUIPMENT DETAILS
+-- Show borrower name with equipment.
+SELECT u.full_name, e.equipment_name, br.quantity, br.borrow_status FROM borrow_records br JOIN users u ON br.user_id = u.user_id JOIN equipment e ON br.equipment_id = e.equipment_id;
 
 
 -- SAVE CHANGES
