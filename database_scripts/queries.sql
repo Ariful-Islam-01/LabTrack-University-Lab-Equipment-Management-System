@@ -143,3 +143,136 @@ SELECT u.full_name, e.equipment_name, br.quantity, br.borrow_status FROM borrow_
 
 -- SAVE CHANGES
 COMMIT;
+
+
+-- ============================================
+-- TRANSACTIONS + PL/SQL
+-- ============================================
+
+
+-- QUERY 1: COMMIT
+-- Update equipment quantity permanently.
+UPDATE equipment SET available_quantity = available_quantity + 5 WHERE equipment_id = 'EQ017';
+
+COMMIT;
+
+
+-- QUERY 2: ROLLBACK
+-- Demonstrate rollback operation.
+UPDATE equipment SET available_quantity = available_quantity - 5 WHERE equipment_id = 'EQ017';
+
+ROLLBACK;
+
+
+-- QUERY 3: ANONYMOUS BLOCK
+-- Display total equipment count.
+SET SERVEROUTPUT ON;
+DECLARE
+    total_equipment NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO total_equipment FROM equipment;
+    DBMS_OUTPUT.PUT_LINE('Total Equipment = ' || total_equipment);
+END;
+/
+
+
+-- QUERY 4: IF ELSE
+-- Check equipment availability.
+DECLARE
+    qty NUMBER;
+BEGIN
+    SELECT available_quantity INTO qty FROM equipment WHERE equipment_id = 'EQ017';
+    IF qty > 0 THEN
+        DBMS_OUTPUT.PUT_LINE('Equipment Available');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Out of Stock');
+    END IF;
+END;
+/
+
+
+-- QUERY 5: IF ELSIF ELSE
+-- Check booking status.
+DECLARE
+    booking_status booking_requests.status%TYPE;
+BEGIN
+    SELECT status INTO booking_status FROM booking_requests WHERE booking_id = 5001;
+    IF booking_status = 'APPROVED' THEN
+        DBMS_OUTPUT.PUT_LINE('Booking Approved');
+    ELSIF booking_status = 'PENDING' THEN
+        DBMS_OUTPUT.PUT_LINE('Booking Pending');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Booking Rejected');
+    END IF;
+END;
+/
+
+
+-- QUERY 6: CASE
+-- Display message based on borrow status.
+DECLARE
+    v_status borrow_records.borrow_status%TYPE;
+BEGIN
+    SELECT borrow_status INTO v_status FROM borrow_records WHERE borrow_id = 7004;
+    CASE v_status
+        WHEN 'BORROWED' THEN
+            DBMS_OUTPUT.PUT_LINE('Item Currently Borrowed');
+        WHEN 'RETURNED' THEN
+            DBMS_OUTPUT.PUT_LINE('Item Returned');
+        WHEN 'OVERDUE' THEN
+            DBMS_OUTPUT.PUT_LINE('Late Return Detected');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('Unknown Status');
+    END CASE;
+END;
+/
+
+
+-- QUERY 7: FOR LOOP
+-- Display first five equipment IDs.
+BEGIN
+    FOR rec IN (SELECT equipment_id, equipment_name FROM equipment WHERE ROWNUM <= 5)
+    LOOP
+        DBMS_OUTPUT.PUT_LINE(rec.equipment_id || ' - ' || rec.equipment_name);
+    END LOOP;
+END;
+/
+
+
+-- QUERY 8: WHILE LOOP
+-- Print numbers from 1 to 5.
+DECLARE
+    counter NUMBER := 1;
+BEGIN
+    WHILE counter <= 5
+    LOOP
+        DBMS_OUTPUT.PUT_LINE('Counter = ' || counter);
+        counter := counter + 1;
+    END LOOP;
+END;
+/
+
+
+-- QUERY 9: SIMPLE LOOP
+-- Print numbers from 1 to 5.
+DECLARE
+    num NUMBER := 1;
+BEGIN
+    LOOP
+        DBMS_OUTPUT.PUT_LINE('Number = ' || num);
+        num := num + 1;
+        EXIT WHEN num > 5;
+    END LOOP;
+END;
+/
+
+
+-- QUERY 10: PL/SQL CALCULATION
+-- Calculate total unpaid fine amount.
+DECLARE
+    total_fine NUMBER;
+BEGIN
+    SELECT SUM(amount) INTO total_fine FROM fines WHERE payment_status = 'UNPAID';
+    DBMS_OUTPUT.PUT_LINE('Total Unpaid Fine = ' || total_fine);
+END;
+/
