@@ -36,20 +36,16 @@ END;
 CREATE OR REPLACE TRIGGER trg_log_borrow
 AFTER INSERT ON borrow_records
 FOR EACH ROW
+
+DECLARE
+    v_log_id NUMBER;
 BEGIN
+    SELECT NVL(MAX(log_id),0)+1 INTO v_log_id FROM equipment_logs;
+
     INSERT INTO equipment_logs
-    (
-        log_id,
-        equipment_id,
-        user_id,
-        action_type,
-        quantity,
-        action_date,
-        remarks
-    )
     VALUES
     (
-        equipment_logs_seq.NEXTVAL,
+        v_log_id,
         :NEW.equipment_id,
         :NEW.user_id,
         'BORROW',
@@ -57,6 +53,7 @@ BEGIN
         SYSDATE,
         'Equipment Borrowed'
     );
+
 END;
 /
 
@@ -67,21 +64,19 @@ END;
 CREATE OR REPLACE TRIGGER trg_log_return
 AFTER UPDATE OF borrow_status ON borrow_records
 FOR EACH ROW
-WHEN (NEW.borrow_status = 'RETURNED')
+WHEN (NEW.borrow_status='RETURNED')
+
+DECLARE
+    v_log_id NUMBER;
+
 BEGIN
+
+    SELECT NVL(MAX(log_id),0)+1 INTO v_log_id FROM equipment_logs;
+
     INSERT INTO equipment_logs
-    (
-        log_id,
-        equipment_id,
-        user_id,
-        action_type,
-        quantity,
-        action_date,
-        remarks
-    )
     VALUES
     (
-        equipment_logs_seq.NEXTVAL,
+        v_log_id,
         :NEW.equipment_id,
         :NEW.user_id,
         'RETURN',
@@ -89,6 +84,7 @@ BEGIN
         SYSDATE,
         'Equipment Returned'
     );
+
 END;
 /
 
