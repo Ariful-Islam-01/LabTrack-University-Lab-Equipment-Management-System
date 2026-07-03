@@ -1,11 +1,66 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 
-Route::get('/login', function () {
-    return view('auth/login');
-});
+// Public Routes
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
 
-Route::get('/dashboard', function () {
-    return view('dashboard/index');
+// Protected Routes
+Route::middleware(['auth.session'])->group(function () {
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Equipment (Index accessible by multiple roles)
+    Route::get('/equipment', function () {
+        abort(501);
+    })->name('equipment.index');
+
+    // Equipment Management (Only LAB_ASSISTANT)
+    Route::middleware(['role:LAB_ASSISTANT'])->group(function () {
+        Route::get('/equipment/create', function () {
+            abort(501);
+        })->name('equipment.create');
+
+        Route::post('/equipment', function () {
+            abort(501);
+        })->name('equipment.store');
+
+        Route::get('/equipment/{equipment}/edit', function () {
+            abort(501);
+        })->name('equipment.edit');
+
+        Route::put('/equipment/{equipment}', function () {
+            abort(501);
+        })->name('equipment.update');
+
+        Route::delete('/equipment/{equipment}', function () {
+            abort(501);
+        })->name('equipment.destroy');
+    });
+
+    // Bookings (Index accessible by multiple roles)
+    Route::get('/bookings', function () {
+        abort(501);
+    })->name('bookings.index');
+
+    // Borrows (Index accessible by multiple roles)
+    Route::get('/borrows', function () {
+        abort(501);
+    })->name('borrows.index');
+
+    // Fines (Only LAB_ASSISTANT)
+    Route::get('/fines', function () {
+        abort(501);
+    })->name('fines.index')->middleware('role:LAB_ASSISTANT');
+
+    // Reports (Index accessible by multiple roles)
+    Route::get('/reports', function () {
+        abort(501);
+    })->name('reports.index');
 });
