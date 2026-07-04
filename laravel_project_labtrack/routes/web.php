@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EquipmentController;
 
 // Public Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -16,10 +17,8 @@ Route::middleware(['auth.session'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Equipment (Index accessible by multiple roles)
-    Route::get('/equipment', function () {
-        abort(501);
-    })->name('equipment.index');
+    Route::get('/equipment', [EquipmentController::class, 'index'])
+        ->name('equipment.index');
 
     // Equipment Management (Only LAB_ASSISTANT)
     Route::middleware(['role:LAB_ASSISTANT'])->group(function () {
