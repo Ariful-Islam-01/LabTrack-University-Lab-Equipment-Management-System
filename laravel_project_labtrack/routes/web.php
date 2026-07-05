@@ -34,9 +34,8 @@ Route::middleware(['auth.session'])->group(function () {
         Route::put('/equipment/{equipment}', [EquipmentController::class, 'update'])
             ->name('equipment.update');
 
-        Route::delete('/equipment/{equipment}', function () {
-            abort(501);
-        })->name('equipment.destroy');
+        Route::delete('/equipment/{equipment}', [EquipmentController::class, 'destroy'])
+            ->name('equipment.destroy');
     });
 
     // Bookings (Index accessible by multiple roles)

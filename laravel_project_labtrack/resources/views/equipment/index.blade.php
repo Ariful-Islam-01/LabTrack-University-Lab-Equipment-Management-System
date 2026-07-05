@@ -14,27 +14,43 @@
         @endif
     </div>
 
-    <!-- Filters Section (UI only) -->
+    <!-- Filters Section -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
-            <div class="row g-3">
-                <div class="col-12 col-md-4">
-                    <input type="text" class="form-control" placeholder="Search..." readonly>
+            <form action="{{ route('equipment.index') }}" method="GET">
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <input type="text" 
+                               name="search" 
+                               class="form-control" 
+                               placeholder="Search by ID or Equipment Name" 
+                               value="{{ request('search') }}">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            @foreach ($categories as $category)
+                                <option value="{{ $category->category_id }}" 
+                                        {{ request('category') == $category->category_id ? 'selected' : '' }}>
+                                    {{ $category->category_name }}
+                                </option>
+                             @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="AVAILABLE" {{ request('status') == 'AVAILABLE' ? 'selected' : '' }}>AVAILABLE</option>
+                            <option value="OUT_OF_STOCK" {{ request('status') == 'OUT_OF_STOCK' ? 'selected' : '' }}>OUT_OF_STOCK</option>
+                            <option value="UNDER_MAINTENANCE" {{ request('status') == 'UNDER_MAINTENANCE' ? 'selected' : '' }}>UNDER_MAINTENANCE</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+                        <a href="{{ route('equipment.index') }}" class="btn btn-outline-secondary flex-grow-1">Reset</a>
+                    </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                    <select class="form-select" disabled>
-                        <option value="">Category</option>
-                    </select>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                    <select class="form-select" disabled>
-                        <option value="">Status</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-2 d-grid">
-                    <button type="button" class="btn btn-outline-secondary" disabled>Reset</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 

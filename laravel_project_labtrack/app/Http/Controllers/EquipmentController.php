@@ -9,7 +9,11 @@ class EquipmentController extends Controller
 {
     public function index()
     {
-        $equipment = DB::table('equipment')
+        $search = request('search');
+        $category = request('category');
+        $status = request('status');
+
+        $query = DB::table('equipment')
             ->join('categories', 'equipment.category_id', '=', 'categories.category_id')
             ->join('labs', 'equipment.lab_id', '=', 'labs.lab_id')
             ->select(
@@ -21,11 +25,33 @@ class EquipmentController extends Controller
                 'equipment.purchase_date',
                 'categories.category_name',
                 'labs.lab_name'
-            )
-            ->orderBy('equipment.purchase_date', 'desc')
-            ->paginate(10);
+            );
 
-        return view('equipment.index', compact('equipment'));
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('equipment.equipment_id', 'like', '%' . $search . '%')
+                  ->orWhere('equipment.equipment_name', 'like', '%' . $search . '%');
+            });
+        }
+
+        if (!empty($category)) {
+            $query->where('equipment.category_id', $category);
+        }
+
+        if (!empty($status)) {
+            $query->where('equipment.status', $status);
+        }
+
+        $equipment = $query->orderBy('equipment.purchase_date', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        $categories = DB::table('categories')
+            ->select('category_id', 'category_name')
+            ->orderBy('category_name', 'asc')
+            ->get();
+
+        return view('equipment.index', compact('equipment', 'categories'));
     }
 
     public function create()
@@ -130,6 +156,20 @@ class EquipmentController extends Controller
 
     public function destroy(string $id)
     {
-        abort(501);
+        try {
+            DB::statement('BEGIN
+                delete_equipment(
+                    :equipment_id
+                );
+            END;', [
+                'equipment_id' => $id,
+            ]);
+
+            return redirect()->route('equipment.index')
+                ->with('success', 'Equipment deleted successfully.');
+        } catch (\Exception $e) {
+            return back()
+                ->with('error', $e->getMessage());
+        }
     }
 }

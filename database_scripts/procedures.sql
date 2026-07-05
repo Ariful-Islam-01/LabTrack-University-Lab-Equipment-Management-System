@@ -316,3 +316,71 @@ EXCEPTION
         );
 END;
 /
+
+
+-- PROCEDURE 7: Delete Equipment
+-- Delete an equipment if no related records exist.
+
+CREATE OR REPLACE PROCEDURE delete_equipment(
+    p_equipment_id VARCHAR2
+)
+AS
+    v_exists NUMBER;
+BEGIN
+    -- 1. Check whether the equipment exists.
+    SELECT COUNT(*)
+    INTO v_exists
+    FROM equipment
+    WHERE equipment_id = p_equipment_id;
+
+    IF v_exists = 0 THEN
+        raise_application_error(
+            -20003,
+            'Equipment not found.'
+        );
+    END IF;
+
+    -- 2. Check if any record exists in booking_requests using equipment_id
+    SELECT COUNT(*)
+    INTO v_exists
+    FROM booking_requests
+    WHERE equipment_id = p_equipment_id;
+
+    IF v_exists > 0 THEN
+        raise_application_error(
+            -20004,
+            'Cannot delete equipment because booking records exist.'
+        );
+    END IF;
+
+    -- 3. Check if any record exists in borrow_records
+    SELECT COUNT(*)
+    INTO v_exists
+    FROM borrow_records
+    WHERE equipment_id = p_equipment_id;
+
+    IF v_exists > 0 THEN
+        raise_application_error(
+            -20005,
+            'Cannot delete equipment because borrow records exist.'
+        );
+    END IF;
+
+    -- 4. Check if any record exists in equipment_logs
+    SELECT COUNT(*)
+    INTO v_exists
+    FROM equipment_logs
+    WHERE equipment_id = p_equipment_id;
+
+    IF v_exists > 0 THEN
+        raise_application_error(
+            -20006,
+            'Cannot delete equipment because equipment logs exist.'
+        );
+    END IF;
+
+    -- 5. Otherwise
+    DELETE FROM equipment
+    WHERE equipment_id = p_equipment_id;
+END;
+/
