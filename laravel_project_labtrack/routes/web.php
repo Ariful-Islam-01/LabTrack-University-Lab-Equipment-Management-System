@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\BookingController;
 
 // Public Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -39,9 +40,16 @@ Route::middleware(['auth.session'])->group(function () {
     });
 
     // Bookings (Index accessible by multiple roles)
-    Route::get('/bookings', function () {
-        abort(501);
-    })->name('bookings.index');
+    Route::get('/bookings', [BookingController::class, 'index'])
+        ->name('bookings.index');
+
+    // Student Booking Routes
+    Route::middleware(['role:STUDENT'])->group(function () {
+        Route::get('/bookings/create/{equipment}', [BookingController::class, 'create'])
+            ->name('bookings.create');
+        Route::post('/bookings', [BookingController::class, 'store'])
+            ->name('bookings.store');
+    });
 
     // Borrows (Index accessible by multiple roles)
     Route::get('/borrows', function () {

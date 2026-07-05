@@ -82,7 +82,7 @@
                             <th class="text-center">Total Qty</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Purchase Date</th>
-                            @if (session('role') === 'LAB_ASSISTANT')
+                            @if (session('role') === 'LAB_ASSISTANT' || session('role') === 'STUDENT')
                                 <th class="text-center">Action</th>
                             @endif
                         </tr>
@@ -110,27 +110,33 @@
                                         <span class="badge {{ $badgeColor }} fw-semibold">{{ $statusUpper }}</span>
                                     </td>
                                     <td class="text-center">{{ \Carbon\Carbon::parse($item->purchase_date)->format('d-M-Y H:i') }}</td>
-                                    @if (session('role') === 'LAB_ASSISTANT')
+                                    @if (session('role') === 'LAB_ASSISTANT' || session('role') === 'STUDENT')
                                         <td class="text-center">
-                                            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-center align-items-stretch align-items-md-center">
-                                                <a href="{{ route('equipment.edit', $item->equipment_id) }}" class="btn btn-sm btn-outline-primary text-nowrap">
-                                                    <i class="bi bi-pencil-square"></i> Edit
+                                            @if (session('role') === 'LAB_ASSISTANT')
+                                                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-center align-items-stretch align-items-md-center">
+                                                    <a href="{{ route('equipment.edit', $item->equipment_id) }}" class="btn btn-sm btn-outline-primary text-nowrap">
+                                                        <i class="bi bi-pencil-square"></i> Edit
+                                                    </a>
+                                                    <form action="{{ route('equipment.destroy', $item->equipment_id) }}" method="POST" onsubmit="return confirm('Are you sure?');" class="d-grid d-md-block m-0">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger text-nowrap w-100">
+                                                            <i class="bi bi-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @elseif (session('role') === 'STUDENT')
+                                                <a href="{{ route('bookings.create', $item->equipment_id) }}" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-journal-plus"></i> Request
                                                 </a>
-                                                <form action="{{ route('equipment.destroy', $item->equipment_id) }}" method="POST" onsubmit="return confirm('Are you sure?');" class="d-grid d-md-block m-0">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger text-nowrap w-100">
-                                                        <i class="bi bi-trash"></i> Delete
-                                                    </button>
-                                                </form>
-                                            </div>
+                                            @endif
                                         </td>
                                     @endif
                                 </tr>
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="{{ session('role') === 'LAB_ASSISTANT' ? 9 : 8 }}" class="text-center py-5">
+                                <td colspan="{{ (session('role') === 'LAB_ASSISTANT' || session('role') === 'STUDENT') ? 9 : 8 }}" class="text-center py-5">
                                     <div class="text-muted mb-3">
                                         <i class="bi bi-inbox fs-1"></i>
                                     </div>

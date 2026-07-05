@@ -384,3 +384,94 @@ BEGIN
     WHERE equipment_id = p_equipment_id;
 END;
 /
+
+
+-- PROCEDURE 8: Add Booking Request
+-- Insert a new booking request after verifying equipment availability and preventing duplicates.
+
+CREATE OR REPLACE PROCEDURE add_booking_request(
+    p_user_id NUMBER,
+    p_equipment_id VARCHAR2,
+    p_quantity NUMBER
+)
+AS
+    v_booking_id NUMBER;
+    v_available_qty NUMBER;
+    v_status VARCHAR2(50);
+    v_pending_count NUMBER;
+BEGIN
+    -- 1. Verify that the equipment exists and retrieve its details.
+    BEGIN
+        SELECT available_quantity, status
+        INTO v_available_qty, v_status
+        FROM equipment
+        WHERE equipment_id = p_equipment_id;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error(
+                -20010,
+                'Equipment not found.'
+            );
+    END;
+
+    -- 2. Allow booking only when equipment status is 'AVAILABLE'.
+    IF v_status <> 'AVAILABLE' THEN
+        raise_application_error(
+            -20011,
+            'Equipment is not available for booking.'
+        );
+    END IF;
+
+    -- 3. Verify requested quantity does not exceed available quantity.
+    IF p_quantity > v_available_qty THEN
+        raise_application_error(
+            -20012,
+            'Requested quantity exceeds available quantity.'
+        );
+    END IF;
+
+    -- 4. Prevent duplicate pending request for the same user and equipment.
+    SELECT COUNT(*)
+    INTO v_pending_count
+    FROM booking_requests
+    WHERE user_id = p_user_id
+      AND equipment_id = p_equipment_id
+      AND status = 'PENDING';
+
+    IF v_pending_count > 0 THEN
+        raise_application_error(
+            -20013,
+            'You already have a pending request for this equipment.'
+        );
+    END IF;
+
+    -- 5. Generate booking_id using MAX + 1.
+    SELECT NVL(MAX(booking_id), 0) + 1
+    INTO v_booking_id
+    FROM booking_requests;
+
+    -- 6. Insert the new booking request record.
+    INSERT INTO booking_requests (
+        booking_id,
+        user_id,
+        equipment_id,
+        quantity,
+        request_date,
+        status,
+        approved_by,
+        approval_date,
+        remarks
+    ) VALUES (
+        v_booking_id,
+        p_user_id,
+        p_equipment_id,
+        p_quantity,
+        SYSDATE,
+        'PENDING',
+        NULL,
+        NULL,
+        NULL
+    );
+END;
+/
+
