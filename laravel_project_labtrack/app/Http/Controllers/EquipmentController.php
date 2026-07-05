@@ -30,22 +30,102 @@ class EquipmentController extends Controller
 
     public function create()
     {
-        abort(501);
+        $categories = DB::table('categories')
+            ->orderBy('category_name', 'asc')
+            ->get();
+
+        $labs = DB::table('labs')
+            ->orderBy('lab_name', 'asc')
+            ->get();
+
+        return view('equipment.create', compact('categories', 'labs'));
     }
 
     public function store(Request $request)
     {
-        abort(501);
+        $validated = $request->validate([
+            'equipment_id'   => 'required|string|max:10|unique:equipment,equipment_id',
+            'equipment_name' => 'required|string|max:150',
+            'category_id'    => 'required|exists:categories,category_id',
+            'lab_id'         => 'required|exists:labs,lab_id',
+            'quantity'       => 'required|integer|min:1',
+        ]);
+
+        try {
+            DB::statement('BEGIN add_equipment(:equipment_id, :equipment_name, :category_id, :lab_id, :quantity); END;', [
+                'equipment_id'   => $validated['equipment_id'],
+                'equipment_name' => $validated['equipment_name'],
+                'category_id'    => $validated['category_id'],
+                'lab_id'         => $validated['lab_id'],
+                'quantity'       => $validated['quantity'],
+            ]);
+
+            return redirect()->route('equipment.index')
+                ->with('success', 'Equipment added successfully.');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function edit(string $id)
     {
-        abort(501);
+        $equipment = DB::table('equipment')
+            ->where('equipment_id', $id)
+            ->first();
+
+        if (!$equipment) {
+            abort(404);
+        }
+
+        $categories = DB::table('categories')
+            ->select('category_id', 'category_name')
+            ->orderBy('category_name', 'asc')
+            ->get();
+
+        $labs = DB::table('labs')
+            ->select('lab_id', 'lab_name')
+            ->orderBy('lab_name', 'asc')
+            ->get();
+
+        return view('equipment.edit', compact('equipment', 'categories', 'labs'));
     }
+
 
     public function update(Request $request, string $id)
     {
-        abort(501);
+        $validated = $request->validate([
+            'equipment_name' => 'required|string|max:150',
+            'category_id'    => 'required|exists:categories,category_id',
+            'lab_id'         => 'required|exists:labs,lab_id',
+            'quantity'       => 'required|integer|min:1',
+        ]);
+
+        try {
+            DB::statement('BEGIN
+                update_equipment(
+                    :equipment_id,
+                    :equipment_name,
+                    :category_id,
+                    :lab_id,
+                    :quantity
+                );
+            END;', [
+                'equipment_id'   => $id,
+                'equipment_name' => $validated['equipment_name'],
+                'category_id'    => $validated['category_id'],
+                'lab_id'         => $validated['lab_id'],
+                'quantity'       => $validated['quantity'],
+            ]);
+
+            return redirect()->route('equipment.index')
+                ->with('success', 'Equipment updated successfully.');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function destroy(string $id)

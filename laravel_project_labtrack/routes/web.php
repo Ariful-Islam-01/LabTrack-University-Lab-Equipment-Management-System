@@ -22,21 +22,17 @@ Route::middleware(['auth.session'])->group(function () {
 
     // Equipment Management (Only LAB_ASSISTANT)
     Route::middleware(['role:LAB_ASSISTANT'])->group(function () {
-        Route::get('/equipment/create', function () {
-            abort(501);
-        })->name('equipment.create');
+        Route::get('/equipment/create', [EquipmentController::class, 'create'])
+            ->name('equipment.create');
 
-        Route::post('/equipment', function () {
-            abort(501);
-        })->name('equipment.store');
+        Route::post('/equipment', [EquipmentController::class, 'store'])
+            ->name('equipment.store');
 
-        Route::get('/equipment/{equipment}/edit', function () {
-            abort(501);
-        })->name('equipment.edit');
+        Route::get('/equipment/{equipment}/edit', [EquipmentController::class, 'edit'])
+            ->name('equipment.edit');
 
-        Route::put('/equipment/{equipment}', function () {
-            abort(501);
-        })->name('equipment.update');
+        Route::put('/equipment/{equipment}', [EquipmentController::class, 'update'])
+            ->name('equipment.update');
 
         Route::delete('/equipment/{equipment}', function () {
             abort(501);

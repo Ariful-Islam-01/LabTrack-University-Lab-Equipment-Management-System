@@ -187,7 +187,6 @@ BEGIN
         SYSDATE
     );
 
-COMMIT;
 END;
 /
 -- Execute
@@ -266,5 +265,54 @@ BEGIN
 
     COMMIT;
 
+END;
+/
+
+
+-- PROCEDURE 6: Update Equipment
+-- Update equipment details and ensure total quantity is not less than borrowed quantity.
+
+CREATE OR REPLACE PROCEDURE update_equipment(
+    p_equipment_id VARCHAR2,
+    p_equipment_name VARCHAR2,
+    p_category_id VARCHAR2,
+    p_lab_id VARCHAR2,
+    p_total_quantity NUMBER
+)
+AS
+    v_total_quantity NUMBER;
+    v_available_quantity NUMBER;
+    v_borrowed_quantity NUMBER;
+BEGIN
+    -- 1. Read current total_quantity and available_quantity
+    SELECT total_quantity, available_quantity
+    INTO v_total_quantity, v_available_quantity
+    FROM equipment
+    WHERE equipment_id = p_equipment_id;
+
+    -- 2. Calculate borrowed_quantity
+    v_borrowed_quantity := v_total_quantity - v_available_quantity;
+
+    -- 3. Check if total quantity is less than borrowed quantity
+    IF p_total_quantity < v_borrowed_quantity THEN
+        raise_application_error(
+            -20001,
+            'Total quantity cannot be less than borrowed quantity.'
+        );
+    END IF;
+
+    -- 4. Update the specified columns
+    UPDATE equipment
+    SET equipment_name = p_equipment_name,
+        category_id = p_category_id,
+        lab_id = p_lab_id,
+        total_quantity = p_total_quantity
+    WHERE equipment_id = p_equipment_id;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        raise_application_error(
+            -20002,
+            'Equipment not found.'
+        );
 END;
 /
