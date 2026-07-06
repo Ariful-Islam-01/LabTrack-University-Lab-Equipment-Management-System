@@ -475,3 +475,57 @@ BEGIN
 END;
 /
 
+
+-- PROCEDURE 9: Update Booking Status
+-- Update status of a booking request after validating existence, pending status, and valid new status.
+CREATE OR REPLACE PROCEDURE update_booking_status(
+    p_booking_id NUMBER,
+    p_teacher_id NUMBER,
+    p_status VARCHAR2,
+    p_remarks VARCHAR2
+)
+AS
+    v_current_status VARCHAR2(20);
+BEGIN
+    -- 1. Verify the booking request exists in the system.
+    BEGIN
+        SELECT status
+        INTO v_current_status
+        FROM booking_requests
+        WHERE booking_id = p_booking_id;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error(
+                -20020,
+                'Booking request not found.'
+            );
+    END;
+
+    -- 2. Verify that the booking request is currently in PENDING status.
+    IF v_current_status <> 'PENDING' THEN
+        raise_application_error(
+            -20021,
+            'Only pending requests can be updated.'
+        );
+    END IF;
+
+    -- 3. Verify that the requested status is valid (only APPROVED or REJECTED are allowed).
+    IF p_status IS NULL OR p_status NOT IN ('APPROVED', 'REJECTED') THEN
+        raise_application_error(
+            -20022,
+            'Invalid booking status.'
+        );
+    END IF;
+
+    -- 4. Perform the update to the booking request record.
+    UPDATE booking_requests
+    SET status = p_status,
+        approved_by = p_teacher_id,
+        approval_date = SYSDATE,
+        remarks = p_remarks
+    WHERE booking_id = p_booking_id;
+
+END;
+/
+
+

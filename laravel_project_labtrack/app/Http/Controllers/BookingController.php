@@ -15,32 +15,57 @@ class BookingController extends Controller
     public function index()
     {
         $userId = session('user_id');
+        $role = session('role');
         $search = request('search');
         $status = request('status');
 
-        $query = DB::table('booking_requests')
-            ->join('equipment', 'booking_requests.equipment_id', '=', 'equipment.equipment_id')
-            ->join('categories', 'equipment.category_id', '=', 'categories.category_id')
-            ->select(
-                'booking_requests.booking_id',
-                'equipment.equipment_name',
-                'categories.category_name',
-                'booking_requests.quantity',
-                'booking_requests.request_date',
-                'booking_requests.status',
-                'booking_requests.remarks'
-            )
-            ->where('booking_requests.user_id', $userId);
+        if ($role === 'TEACHER') {
+            $query = DB::table('booking_requests')
+                ->join('users', 'booking_requests.user_id', '=', 'users.user_id')
+                ->join('equipment', 'booking_requests.equipment_id', '=', 'equipment.equipment_id')
+                ->join('categories', 'equipment.category_id', '=', 'categories.category_id')
+                ->select(
+                    'booking_requests.booking_id',
+                    'booking_requests.user_id as student_id',
+                    'users.full_name as student_name',
+                    'equipment.equipment_name',
+                    'categories.category_name',
+                    'booking_requests.quantity',
+                    'booking_requests.request_date',
+                    'booking_requests.status',
+                    'booking_requests.remarks'
+                );
+
+            if (!empty($status)) {
+                $query->where('booking_requests.status', strtoupper($status));
+            } else {
+                $query->where('booking_requests.status', 'PENDING');
+            }
+        } else {
+            $query = DB::table('booking_requests')
+                ->join('equipment', 'booking_requests.equipment_id', '=', 'equipment.equipment_id')
+                ->join('categories', 'equipment.category_id', '=', 'categories.category_id')
+                ->select(
+                    'booking_requests.booking_id',
+                    'equipment.equipment_name',
+                    'categories.category_name',
+                    'booking_requests.quantity',
+                    'booking_requests.request_date',
+                    'booking_requests.status',
+                    'booking_requests.remarks'
+                )
+                ->where('booking_requests.user_id', $userId);
+
+            if (!empty($status)) {
+                $query->where('booking_requests.status', strtoupper($status));
+            }
+        }
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('equipment.equipment_name', 'like', '%' . $search . '%')
                   ->orWhere('categories.category_name', 'like', '%' . $search . '%');
             });
-        }
-
-        if (!empty($status)) {
-            $query->where('booking_requests.status', strtoupper($status));
         }
 
         $bookings = $query->orderBy('booking_requests.request_date', 'desc')
@@ -115,23 +140,48 @@ class BookingController extends Controller
     /**
      * Approve the specified booking.
      *
-     * @param  string  $id
-     * @return void
+     * @param  string  $booking
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function approve(string $id)
+    public function approve($booking)
     {
-        abort(501);
+        return $this->updateStatus($booking, 'APPROVED', 'Approved');
     }
 
     /**
      * Reject the specified booking.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string  $id
-     * @return void
+     * @param  string  $booking
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function reject(Request $request, string $id)
+    public function reject($booking)
     {
-        abort(501);
+        return $this->updateStatus($booking, 'REJECTED', 'Rejected');
+    }
+
+    /**
+     * Helper to update booking status using Oracle procedure.
+     *
+     * @param  string  $bookingId
+     * @param  string  $status
+     * @param  string  $remarks
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    protected function updateStatus($bookingId, $status, $remarks)
+    {
+        $teacherId = session('user_id');
+
+        try {
+            DB::statement('BEGIN update_booking_status(:booking_id, :teacher_id, :status, :remarks); END;', [
+                'booking_id' => $bookingId,
+                'teacher_id' => $teacherId,
+                'status'     => $status,
+                'remarks'    => $remarks,
+            ]);
+
+            return back()->with('success', "Booking request " . strtolower($status) . " successfully.");
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

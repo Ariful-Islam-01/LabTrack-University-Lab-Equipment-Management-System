@@ -51,6 +51,14 @@ Route::middleware(['auth.session'])->group(function () {
             ->name('bookings.store');
     });
 
+    // Teacher Booking Routes
+    Route::middleware(['role:TEACHER'])->group(function () {
+        Route::post('/bookings/{booking}/approve', [BookingController::class, 'approve'])
+            ->name('bookings.approve');
+        Route::post('/bookings/{booking}/reject', [BookingController::class, 'reject'])
+            ->name('bookings.reject');
+    });
+
     // Borrows (Index accessible by multiple roles)
     Route::get('/borrows', function () {
         abort(501);
