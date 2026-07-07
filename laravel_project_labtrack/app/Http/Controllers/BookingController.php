@@ -19,7 +19,7 @@ class BookingController extends Controller
         $search = request('search');
         $status = request('status');
 
-        if ($role === 'TEACHER') {
+        if ($role === 'TEACHER' || $role === 'LAB_ASSISTANT') {
             $query = DB::table('booking_requests')
                 ->join('users', 'booking_requests.user_id', '=', 'users.user_id')
                 ->join('equipment', 'booking_requests.equipment_id', '=', 'equipment.equipment_id')
@@ -39,7 +39,11 @@ class BookingController extends Controller
             if (!empty($status)) {
                 $query->where('booking_requests.status', strtoupper($status));
             } else {
-                $query->where('booking_requests.status', 'PENDING');
+                if ($role === 'TEACHER') {
+                    $query->where('booking_requests.status', 'PENDING');
+                } else {
+                    $query->where('booking_requests.status', 'APPROVED');
+                }
             }
         } else {
             $query = DB::table('booking_requests')

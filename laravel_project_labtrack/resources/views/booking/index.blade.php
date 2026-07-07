@@ -69,7 +69,7 @@
                                 <th>Request Date</th>
                                 <th class="text-center">Status</th>
                                 <th>Remarks</th>
-                                @if (session('role') === 'TEACHER')
+                                @if (session('role') === 'TEACHER' || session('role') === 'LAB_ASSISTANT')
                                     <th class="text-center">Action</th>
                                 @endif
                             </tr>
@@ -95,22 +95,33 @@
                                         <span class="badge {{ $badgeColor }} fw-semibold">{{ $statusUpper }}</span>
                                     </td>
                                     <td>{{ $booking->remarks ?? '-' }}</td>
-                                    @if (session('role') === 'TEACHER')
+                                    @if (session('role') === 'TEACHER' || session('role') === 'LAB_ASSISTANT')
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-2">
-                                                <form action="{{ route('bookings.approve', $booking->booking_id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to approve this booking request?')">
-                                                        Approve
-                                                     </button>
-                                                </form>
-                                                <form action="{{ route('bookings.reject', $booking->booking_id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to reject this booking request?')">
-                                                        Reject
-                                                    </button>
-                                                </form>
-                                            </div>
+                                            @if (session('role') === 'TEACHER')
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <form action="{{ route('bookings.approve', $booking->booking_id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to approve this booking request?')">
+                                                            Approve
+                                                         </button>
+                                                    </form>
+                                                    <form action="{{ route('bookings.reject', $booking->booking_id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to reject this booking request?')">
+                                                            Reject
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @elseif (session('role') === 'LAB_ASSISTANT')
+                                                @if (strtoupper($booking->status) === 'APPROVED')
+                                                    <form action="{{ route('borrows.issue', $booking->booking_id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-primary btn-sm">
+                                                            Issue
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endif
                                         </td>
                                     @endif
                                 </tr>

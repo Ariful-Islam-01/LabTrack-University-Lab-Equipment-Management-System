@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BorrowController;
 
 // Public Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -37,6 +38,12 @@ Route::middleware(['auth.session'])->group(function () {
 
         Route::delete('/equipment/{equipment}', [EquipmentController::class, 'destroy'])
             ->name('equipment.destroy');
+
+        Route::post('/borrows/issue/{booking}', [BorrowController::class, 'issue'])
+            ->name('borrows.issue');
+
+        Route::post('/borrows/return/{borrow}', [BorrowController::class, 'returnEquipment'])
+            ->name('borrows.return');
     });
 
     // Bookings (Index accessible by multiple roles)
@@ -59,10 +66,9 @@ Route::middleware(['auth.session'])->group(function () {
             ->name('bookings.reject');
     });
 
-    // Borrows (Index accessible by multiple roles)
-    Route::get('/borrows', function () {
-        abort(501);
-    })->name('borrows.index');
+    // Borrows (Accessible by STUDENT & LAB_ASSISTANT)
+    Route::get('/borrows', [BorrowController::class, 'index'])
+    ->name('borrows.index');
 
     // Fines (Only LAB_ASSISTANT)
     Route::get('/fines', function () {

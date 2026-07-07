@@ -74,18 +74,75 @@ CREATE OR REPLACE PROCEDURE borrow_equipment(
     p_quantity NUMBER
 )
 AS
-    v_stock NUMBER;
-
+    v_stock             NUMBER;
+    v_status            booking_requests.status%TYPE;
+    v_booking_quantity  booking_requests.quantity%TYPE;
+    v_booking_user      booking_requests.user_id%TYPE;
+    v_booking_equipment booking_requests.equipment_id%TYPE;
 BEGIN
+    -- Verify booking exists and retrieve booking information
+    BEGIN
+        SELECT status,
+               quantity,
+               user_id,
+               equipment_id
+        INTO   v_status,
+               v_booking_quantity,
+               v_booking_user,
+               v_booking_equipment
+        FROM booking_requests
+        WHERE booking_id = p_booking_id;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error(
+                -20030,
+                'Booking request not found.'
+            );
+    END;
+
+    -- Booking must be approved
+    IF v_status <> 'APPROVED' THEN
+        raise_application_error(
+            -20031,
+            'Only approved booking requests can be borrowed.'
+        );
+    END IF;
+
+    -- User validation
+    IF v_booking_user <> p_user_id THEN
+        raise_application_error(
+            -20032,
+            'Booking does not belong to this user.'
+        );
+    END IF;
+
+    -- Equipment validation
+    IF v_booking_equipment <> p_equipment_id THEN
+        raise_application_error(
+            -20033,
+            'Equipment does not match the booking request.'
+        );
+    END IF;
+
+    -- Quantity validation
+    IF v_booking_quantity <> p_quantity THEN
+        raise_application_error(
+            -20034,
+            'Borrow quantity does not match the approved booking quantity.'
+        );
+    END IF;
+
+    -- Check available stock using the existing function
     v_stock := get_available_stock(p_equipment_id);
 
     IF v_stock < p_quantity THEN
-        RAISE_APPLICATION_ERROR(
-            -20001,
+        raise_application_error(
+            -20035,
             'Insufficient stock available.'
         );
     END IF;
 
+    -- Insert borrow record
     INSERT INTO borrow_records
     (
         borrow_id,
@@ -95,9 +152,9 @@ BEGIN
         quantity,
         borrow_date,
         expected_return_date,
+        actual_return_date,
         borrow_status
     )
-
     VALUES
     (
         p_borrow_id,
@@ -106,11 +163,10 @@ BEGIN
         p_equipment_id,
         p_quantity,
         SYSDATE,
-        SYSDATE+7,
+        SYSDATE + 7,
+        NULL,
         'BORROWED'
     );
-
-    COMMIT;
 
 END;
 /
@@ -152,13 +208,37 @@ CREATE OR REPLACE PROCEDURE return_equipment(
     p_borrow_id NUMBER
 )
 AS
-
+    v_status borrow_records.borrow_status%TYPE;
 BEGIN
-    UPDATE borrow_records
-    SET borrow_status='RETURNED', actual_return_date=SYSDATE
-    WHERE borrow_id=p_borrow_id;
+    -- Verify borrow record exists
+    BEGIN
+        SELECT borrow_status
+        INTO v_status
+        FROM borrow_records
+        WHERE borrow_id = p_borrow_id;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error(
+                -20040,
+                'Borrow record not found.'
+            );
+    END;
 
-    COMMIT;
+    -- Check if already returned
+    IF v_status = 'RETURNED' THEN
+        raise_application_error(
+            -20041,
+            'Equipment has already been returned.'
+        );
+    END IF;
+
+    -- Update borrow record
+    UPDATE borrow_records
+    SET
+        borrow_status = 'RETURNED',
+        actual_return_date = SYSDATE
+    WHERE borrow_id = p_borrow_id;
+
 END;
 /
 
@@ -232,38 +312,76 @@ CREATE OR REPLACE PROCEDURE generate_fine(
     p_fine_id NUMBER,
     p_borrow_id NUMBER
 )
-
 AS
     v_expected DATE;
     v_actual DATE;
     v_amount NUMBER;
-
+    v_exists NUMBER;
 BEGIN
-    SELECT
-        expected_return_date,
-        actual_return_date
-    INTO
-        v_expected,
-        v_actual
-    FROM borrow_records
-    WHERE borrow_id=p_borrow_id;
+    -- Verify borrow record exists
+    BEGIN
+        SELECT
+            expected_return_date,
+            actual_return_date
+        INTO
+            v_expected,
+            v_actual
+        FROM borrow_records
+        WHERE borrow_id = p_borrow_id;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error(
+                -20050,
+                'Borrow record not found.'
+            );
+    END;
 
+    -- Verify equipment has been returned
+    IF v_actual IS NULL THEN
+        raise_application_error(
+            -20051,
+            'Equipment has not been returned yet.'
+        );
+    END IF;
+
+    -- Prevent duplicate fine generation
+    SELECT COUNT(*)
+    INTO v_exists
+    FROM fines
+    WHERE borrow_id = p_borrow_id;
+
+    IF v_exists > 0 THEN
+        raise_application_error(
+            -20052,
+            'Fine has already been generated.'
+        );
+    END IF;
+
+    -- Calculate fine amount using existing function
     v_amount := calculate_fine(
         v_expected,
         v_actual
     );
 
-    INSERT INTO fines
-    VALUES
-    (
-        p_fine_id,
-        p_borrow_id,
-        v_amount,
-        'Late Return',
-        'UNPAID'
-    );
-
-    COMMIT;
+    -- Insert fine only if amount is greater than zero
+    IF v_amount > 0 THEN
+        INSERT INTO fines
+        (
+            fine_id,
+            borrow_id,
+            amount,
+            reason,
+            payment_status
+        )
+        VALUES
+        (
+            p_fine_id,
+            p_borrow_id,
+            v_amount,
+            'Late Return',
+            'UNPAID'
+        );
+    END IF;
 
 END;
 /
