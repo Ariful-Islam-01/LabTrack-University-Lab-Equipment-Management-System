@@ -24,6 +24,9 @@
             <a href="{{ route('borrows.index') }}" class="list-group-item list-group-item-action border-0 rounded mb-1 {{ request()->routeIs('borrows.*') ? 'active' : '' }}">
                 <i class="bi bi-clock-history me-2"></i> My Borrow Records
             </a>
+            <a href="{{ route('fines.index') }}" class="list-group-item list-group-item-action border-0 rounded mb-1 {{ request()->routeIs('fines.*') ? 'active' : '' }}">
+                <i class="bi bi-currency-dollar me-2"></i> Fines
+            </a>
         @endif
 
         <!-- TEACHER Menu -->

@@ -647,3 +647,43 @@ END;
 /
 
 
+-- PROCEDURE 10: Mark Fine As Paid
+-- Verify existence, check unpaid status, and update fine payment status to PAID without committing.
+CREATE OR REPLACE PROCEDURE mark_fine_paid(
+    p_fine_id NUMBER
+)
+AS
+    v_payment_status VARCHAR2(20);
+BEGIN
+    -- 1. Verify that the fine exists in the system.
+    BEGIN
+        SELECT payment_status
+        INTO v_payment_status
+        FROM fines
+        WHERE fine_id = p_fine_id;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error(
+                -20060,
+                'Fine record not found.'
+            );
+    END;
+
+    -- 2. Verify that payment_status is currently: UNPAID.
+    IF v_payment_status = 'PAID' THEN
+        raise_application_error(
+            -20061,
+            'Fine has already been paid.'
+        );
+    END IF;
+
+    -- 3. Update payment_status to 'PAID'.
+    UPDATE fines
+    SET payment_status = 'PAID'
+    WHERE fine_id = p_fine_id;
+
+END;
+/
+
+
+

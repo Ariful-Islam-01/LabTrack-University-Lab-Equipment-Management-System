@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BorrowController;
+use App\Http\Controllers\FineController;
 
 // Public Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -68,12 +69,20 @@ Route::middleware(['auth.session'])->group(function () {
 
     // Borrows (Accessible by STUDENT & LAB_ASSISTANT)
     Route::get('/borrows', [BorrowController::class, 'index'])
-    ->name('borrows.index');
+        ->name('borrows.index');
 
-    // Fines (Only LAB_ASSISTANT)
-    Route::get('/fines', function () {
-        abort(501);
-    })->name('fines.index')->middleware('role:LAB_ASSISTANT');
+    // Fines (Accessible by LAB_ASSISTANT and STUDENT)
+    Route::get('/fines', [FineController::class, 'index'])
+        ->name('fines.index')
+        ->middleware('role:LAB_ASSISTANT,STUDENT');
+
+    Route::post('/fines/generate/{borrow}', [FineController::class, 'generate'])
+        ->name('fines.generate')
+        ->middleware('role:LAB_ASSISTANT');
+
+    Route::post('/fines/pay/{fine}', [FineController::class, 'markPaid'])
+        ->name('fines.markPaid')
+        ->middleware('role:LAB_ASSISTANT');
 
     // Reports (Index accessible by multiple roles)
     Route::get('/reports', function () {

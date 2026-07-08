@@ -13,25 +13,25 @@ class RoleMiddleware
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     * @param  string  $role
+     * @param  string  ...$roles
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
         // Read the user's role from the session
-        $userRole = $request->session()->get('role');
+        $userRole = session('role');
 
         // If the user is not logged in (session has no role), redirect to /login
         if (!$userRole) {
             return redirect('/login');
         }
 
-        // If the role does not match, redirect to /dashboard with an "Access Denied" flash message
-        if ($userRole !== $role) {
+        // If the user's role is NOT inside the allowed roles, redirect to dashboard with an "Access Denied" flash message
+        if (!in_array($userRole, $roles)) {
             return redirect('/dashboard')->with('error', 'Access Denied');
         }
 
-        // If the role matches, allow the request
+        // If the role matches any allowed role, continue the request
         return $next($request);
     }
 }
