@@ -7,6 +7,7 @@ use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BorrowController;
 use App\Http\Controllers\FineController;
+use App\Http\Controllers\ReportController;
 
 // Public Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -84,8 +85,52 @@ Route::middleware(['auth.session'])->group(function () {
         ->name('fines.markPaid')
         ->middleware('role:LAB_ASSISTANT');
 
-    // Reports (Index accessible by multiple roles)
-    Route::get('/reports', function () {
-        abort(501);
-    })->name('reports.index');
+    // Reports Dashboard (Index accessible by LAB_ASSISTANT, TEACHER, STUDENT)
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index')
+        ->middleware('role:LAB_ASSISTANT,TEACHER,STUDENT');
+
+    // LAB_ASSISTANT Reports
+    Route::get('/reports/equipment', [ReportController::class, 'equipmentReport'])
+        ->name('reports.equipment')
+        ->middleware('role:LAB_ASSISTANT');
+
+    Route::get('/reports/borrows', [ReportController::class, 'borrowReport'])
+        ->name('reports.borrows')
+        ->middleware('role:LAB_ASSISTANT');
+
+    Route::get('/reports/fines', [ReportController::class, 'fineReport'])
+        ->name('reports.fines')
+        ->middleware('role:LAB_ASSISTANT');
+
+    // Advanced Reports (LAB_ASSISTANT only)
+    Route::get('/reports/most-borrowed', [ReportController::class, 'mostBorrowed'])
+        ->name('reports.most_borrowed')
+        ->middleware('role:LAB_ASSISTANT');
+
+    Route::get('/reports/top-borrowers', [ReportController::class, 'topBorrowers'])
+        ->name('reports.top_borrowers')
+        ->middleware('role:LAB_ASSISTANT');
+
+    Route::get('/reports/category', [ReportController::class, 'categoryReport'])
+        ->name('reports.category')
+        ->middleware('role:LAB_ASSISTANT');
+
+    Route::get('/reports/recent-activities', [ReportController::class, 'recentActivities'])
+        ->name('reports.recent_activities')
+        ->middleware('role:LAB_ASSISTANT');
+
+    // TEACHER & LAB_ASSISTANT Reports
+    Route::get('/reports/bookings', [ReportController::class, 'bookingReport'])
+        ->name('reports.bookings')
+        ->middleware('role:LAB_ASSISTANT,TEACHER');
+
+    // STUDENT Reports
+    Route::get('/reports/my-borrows', [ReportController::class, 'myBorrows'])
+        ->name('reports.my_borrows')
+        ->middleware('role:STUDENT');
+
+    Route::get('/reports/my-fines', [ReportController::class, 'myFines'])
+        ->name('reports.my_fines')
+        ->middleware('role:STUDENT');
 });
