@@ -11,6 +11,9 @@
 <a href="{{ route('fines.index') }}" class="list-group-item list-group-item-action border-0 rounded mb-1 {{ request()->routeIs('fines.*') ? 'active' : '' }}">
     <i class="bi bi-currency-dollar me-2"></i> Fines
 </a>
+<a href="{{ route('students.index') }}" class="list-group-item list-group-item-action border-0 rounded mb-1 {{ request()->routeIs('students.*') ? 'active' : '' }}">
+    <i class="bi bi-people-fill me-2"></i> Students
+</a>
 
 <!-- Reports Submenu -->
 <a href="#reportsSubmenu" data-bs-toggle="collapse" class="list-group-item list-group-item-action border-0 rounded mb-1 d-flex justify-content-between align-items-center {{ request()->routeIs('reports.*') ? 'active' : '' }}">

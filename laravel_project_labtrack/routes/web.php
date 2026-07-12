@@ -8,6 +8,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BorrowController;
 use App\Http\Controllers\FineController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\StudentController;
 
 // Public Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -133,4 +134,20 @@ Route::middleware(['auth.session'])->group(function () {
     Route::get('/reports/my-fines', [ReportController::class, 'myFines'])
         ->name('reports.my_fines')
         ->middleware('role:STUDENT');
+
+    // Student Management (Only LAB_ASSISTANT)
+    Route::middleware(['role:LAB_ASSISTANT'])->group(function () {
+        Route::get('/students', [StudentController::class, 'index'])
+            ->name('students.index');
+        Route::get('/students/create', [StudentController::class, 'create'])
+            ->name('students.create');
+        Route::post('/students', [StudentController::class, 'store'])
+            ->name('students.store');
+        Route::get('/students/{student}/edit', [StudentController::class, 'edit'])
+            ->name('students.edit');
+        Route::put('/students/{student}', [StudentController::class, 'update'])
+            ->name('students.update');
+        Route::delete('/students/{student}', [StudentController::class, 'destroy'])
+            ->name('students.destroy');
+    });
 });
