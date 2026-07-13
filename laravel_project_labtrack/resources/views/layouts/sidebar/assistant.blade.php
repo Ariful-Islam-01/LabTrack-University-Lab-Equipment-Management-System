@@ -14,6 +14,9 @@
 <a href="{{ route('students.index') }}" class="list-group-item list-group-item-action border-0 rounded mb-1 {{ request()->routeIs('students.*') ? 'active' : '' }}">
     <i class="bi bi-people-fill me-2"></i> Students
 </a>
+<a href="{{ route('teachers.index') }}" class="list-group-item list-group-item-action border-0 rounded mb-1 {{ request()->routeIs('teachers.*') ? 'active' : '' }}">
+    <i class="bi bi-person-workspace me-2"></i> Teachers
+</a>
 
 <!-- Reports Submenu -->
 <a href="#reportsSubmenu" data-bs-toggle="collapse" class="list-group-item list-group-item-action border-0 rounded mb-1 d-flex justify-content-between align-items-center {{ request()->routeIs('reports.*') ? 'active' : '' }}">

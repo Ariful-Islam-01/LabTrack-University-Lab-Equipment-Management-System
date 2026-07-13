@@ -9,6 +9,7 @@ use App\Http\Controllers\BorrowController;
 use App\Http\Controllers\FineController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
 
 // Public Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -149,5 +150,21 @@ Route::middleware(['auth.session'])->group(function () {
             ->name('students.update');
         Route::delete('/students/{student}', [StudentController::class, 'destroy'])
             ->name('students.destroy');
+    });
+
+    // Teacher Management (Only LAB_ASSISTANT)
+    Route::middleware(['role:LAB_ASSISTANT'])->group(function () {
+        Route::get('/teachers', [TeacherController::class, 'index'])
+            ->name('teachers.index');
+        Route::get('/teachers/create', [TeacherController::class, 'create'])
+            ->name('teachers.create');
+        Route::post('/teachers', [TeacherController::class, 'store'])
+            ->name('teachers.store');
+        Route::get('/teachers/{teacher}/edit', [TeacherController::class, 'edit'])
+            ->name('teachers.edit');
+        Route::put('/teachers/{teacher}', [TeacherController::class, 'update'])
+            ->name('teachers.update');
+        Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy'])
+            ->name('teachers.destroy');
     });
 });
