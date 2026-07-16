@@ -1,5 +1,5 @@
 -- ======================================================
--- PHASE 13.7: ADVANCED DATABASE REPORTS
+-- PHASE: ADVANCED DATABASE REPORTS
 -- VIEW & CURSOR PL/SQL DEMONSTRATION
 -- ======================================================
 
@@ -25,7 +25,7 @@ JOIN categories c ON e.category_id = c.category_id;
 SELECT * FROM vw_borrow_details;
 
 
--- PART 4: PL/SQL CURSOR DEMONSTRATION (TOP BORROWERS)
+-- PART 2: PL/SQL CURSOR DEMONSTRATION (TOP BORROWERS)
 -- Note: This is a standalone PL/SQL script for execution in SQL*Plus / SQL Developer.
 SET SERVEROUTPUT ON;
 
