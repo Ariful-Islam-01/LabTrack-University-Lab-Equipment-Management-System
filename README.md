@@ -347,14 +347,11 @@ http://127.0.0.1:8000
 
 ---
 
-## 🖼️ Screenshots & Diagrams
+## 🖼️ Diagrams
 
 ### Database Diagrams
 * **Entity-Relationship Diagram**: [LabTrack_ER_Diagram.png](documentation/LabTrack_ER_Diagram.png)
 * **Relational Schema Diagram**: [LabTrack_Schema_Diagram.png](documentation/LabTrack_Schema_Diagram.png)
-
-### User Interface Screenshots
-> *Note: Application UI screenshots can be added here as needed.*
 
 ---
 
