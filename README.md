@@ -372,7 +372,7 @@ http://127.0.0.1:8000
 
 * **University**: Khulna University of Engineering & Technology (KUET)
 * **Department**: Computer Science and Engineering (CSE)
-* **Course**: Database Systems Laboratory / CSE Project
+* **Course**: Database Systems Laboratory
 * **Project Title**: University Lab Equipment Management System (LabTrack)
 
 ---
